@@ -28,8 +28,11 @@ console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 logging.getLogger('').addHandler(console)
 
+# %% set date of metadata retrieval
+date = '20241210'
+
 # %% Get views and downloads from Zenodo
-community = "crc172-ac3"
+community = 'crc172-ac3'
 records = fn.query_zenodo(community)
 total_views = 0
 total_downloads = 0
@@ -39,14 +42,14 @@ for record in records:
     total_views += stats.get('unique_views', 0)
     total_downloads += stats.get('unique_downloads', 0)
 
-print(f"Total Views: {total_views}")
-print(f"Total Downloads: {total_downloads}")
+print(f'Total Views: {total_views}')
+print(f'Total Downloads: {total_downloads}')
 
 # %% Load JSON files with all AC3 publications and do some preprocessing
-with open('./data/datasets_ac3_zenodo.json', 'r', encoding='utf-8') as z_file:
+with open(f'./data/{date}-datasets_ac3_zenodo.json', 'r', encoding='utf-8') as z_file:
     zenodo_data = json.load(z_file)
 
-with open('./data/datasets_ac3_pangaea.json', 'r', encoding='utf-8') as p_file:
+with open(f'./data/{date}-datasets_ac3_pangaea.json', 'r', encoding='utf-8') as p_file:
     pangaea_data = json.load(p_file)
 
 # Merge the datasets
@@ -143,7 +146,7 @@ wordcloud = wordcloud.generate(titles_combined)
 
 fig, ax = plt.subplots(1)
 ax.imshow(wordcloud, interpolation='bilinear')
-ax.axis("off")
+ax.axis('off')
 fig.savefig('figures/wordcloud_ellipse_' + dt.datetime.now().strftime('%Y%m%d') + '.png', dpi=300, transparent=False)
 plt.show()
 
