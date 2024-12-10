@@ -13,3 +13,13 @@ The (AC)³ specific set names are `user-crc172-ac3`for Zenodo and `query~cHJvamV
 Zenodo also offers simple access via HTTP and one can retrieve all data sets from a community. `functions.py` has the function `query_zenodo()` for that purpose.
 
 Given a DOI from PANGAEA we can also retrieve usage statistics of this individual data set with `get_usage_statistics.py`
+
+## How to use
+
+Clone the repository and create the folders `data` and `figures`. 
+
+Create your venv or conda env using `requirements.txt` or `enviornment.yml` respectively.
+
+Run `metadata_harvest.py` to create json files of the metadata from PANGAEA and Zenodo.
+
+In `ac3_data_publication_plots.py` adjust the plots to your liking.
