@@ -7,3 +7,6 @@ figures
 
 # log files
 *.log
+
+# python
+__pycache__
