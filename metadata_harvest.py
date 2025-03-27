@@ -6,7 +6,15 @@
 Retrieve metadata from repositories and write them to a JSON file for each repository.
 """
 import functions as fn
+import logging
 import time
+
+# Set up logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logging.getLogger(__name__).addHandler(console)
 
 date = time.strftime("%Y%m%d", time.localtime())
 
