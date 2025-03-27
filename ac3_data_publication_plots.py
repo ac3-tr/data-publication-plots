@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-logging.getLogger('').addHandler(console)
+logging.getLogger(__name__).addHandler(console)
 
 # %% set date of metadata retrieval
 date = '20250327'
@@ -152,17 +152,31 @@ plt.show()
 
 # %% Plot cumulative publications and yearly publications
 cm = 1 / 2.54
-plt.rc('font', size=30)
-figsize = (40 * cm, 15 * cm)
-yearly_publications = yearly_publications[yearly_publications['year'] >= 2016]
-fig, ax = plt.subplots(figsize=figsize, layout='constrained')
+fmt = dict(presentation=
+           dict(figsize=(15 * cm, 7.5 *cm),
+                lw=2,
+                fontsize=12,
+                legendfontsize=10),
+           poster=
+           dict(figsize=(40 * cm, 15 *cm),
+                lw=6,
+                fontsize=40,
+                legendfontsize=24
+                )
+           )
+mode = 'presentation'
+fmt = fmt[mode]
+plt.rc('font', size=fmt['fontsize'])
+yearly_publications = yearly_publications[(yearly_publications['year'] >= 2016) &
+                                          (yearly_publications['year'] < 2025)]
+fig, ax = plt.subplots(figsize=fmt['figsize'], layout='constrained')
 # Plot the bar chart for yearly publications
 sns.barplot(data=yearly_publications, x='year', y='count', hue='publisher')
 
 # Plot the line chart for cumulative publications
 sns.pointplot(data=yearly_publications, x='year', y='cumulative_count',
              marker='o', label='Cumulative\npublications',
-             color='orange', lw=6,
+             color='orange', lw=fmt['lw'],
              ax=ax)
 
 # Get x-axis categorical positions
@@ -172,7 +186,7 @@ x_positions = range(len(yearly_publications['year'].unique()))
 y_pubs = pd.DataFrame(yearly_publications.groupby('year')['count'].sum())
 y_pubs['cumsum'] = y_pubs.cumsum()
 for x, y, label in zip(x_positions, y_pubs['cumsum'], y_pubs['cumsum']):
-    ax.text(x, y + 0.2, str(label), ha='right', fontsize=24)
+    ax.text(x, y + 0.2, str(label), ha='right', fontsize=fmt['legendfontsize'])
 
 # Add labels and title
 ax.set(
@@ -181,12 +195,12 @@ ax.set(
     xlabel='Year',
     ylabel='Count',
 )
-ax.legend(fontsize=24)
+ax.legend(fontsize=fmt['legendfontsize'])
 ax.tick_params(axis='x', rotation=45)  # Rotates the x-axis tick labels by 45 degrees
 ax.yaxis.set_major_locator(plt.MultipleLocator(base=500))
 
 now = pd.to_datetime(time.time(), unit='s').strftime('%Y-%m-%d')
-plt.savefig(f'./figures/{now}_yearly_cumulative_publications.png', dpi=300)
+plt.savefig(f'./figures/{now}_yearly_cumulative_publications_{mode}.png', dpi=300)
 plt.show()
 plt.close()
 
