@@ -29,7 +29,7 @@ console.setLevel(logging.INFO)
 logging.getLogger('').addHandler(console)
 
 # %% set date of metadata retrieval
-date = '20241210'
+date = '20250327'
 
 # %% Get views and downloads from Zenodo
 community = 'crc172-ac3'
