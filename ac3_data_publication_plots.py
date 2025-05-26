@@ -29,7 +29,7 @@ console.setLevel(logging.INFO)
 logging.getLogger(__name__).addHandler(console)
 
 # %% set date of metadata retrieval
-date = '20250327'
+date = '20250526'
 
 # %% Get views and downloads from Zenodo
 community = 'crc172-ac3'
@@ -105,6 +105,15 @@ yearly_publications = df.groupby(['year', 'publisher']).size().reset_index(name=
 # Calculate cumulative publications
 yearly_publications['cumulative_count'] = yearly_publications['count'].cumsum()
 
+# %% Create mask for wordcloud
+from matplotlib.patches import Ellipse
+ellipse = Ellipse((0, 0), 8, 4, angle=0)
+_, ax = plt.subplots()
+ax.set(xlim=(-4.2, 4.2), ylim=(-2.2, 2.2))#, aspect="equal")
+ax.add_artist(ellipse)
+plt.savefig('./figures/ellipse_mask.png')
+plt.show()
+plt.close()
 
 # %% Generate and plot a wordcloud made out of the most common words in the data sets
 titles = df['title'].to_list()
@@ -168,7 +177,7 @@ mode = 'presentation'
 fmt = fmt[mode]
 plt.rc('font', size=fmt['fontsize'])
 yearly_publications = yearly_publications[(yearly_publications['year'] >= 2016) &
-                                          (yearly_publications['year'] < 2025)]
+                                          (yearly_publications['year'] < 2028)]
 fig, ax = plt.subplots(figsize=fmt['figsize'], layout='constrained')
 # Plot the bar chart for yearly publications
 sns.barplot(data=yearly_publications, x='year', y='count', hue='publisher')
