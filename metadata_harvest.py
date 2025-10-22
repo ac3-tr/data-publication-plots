@@ -11,7 +11,7 @@ import time
 
 # Set up logging
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+                    format='%(message)s')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 logging.getLogger(__name__).addHandler(console)

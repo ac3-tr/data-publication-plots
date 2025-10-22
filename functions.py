@@ -60,7 +60,7 @@ def get_metadata_from_repository(oai_url, set_name, output_file, metadata_prefix
     datasets = []
 
     # Fetch records
-    logging.info(f'Starting dataset retrieval from {oai_url}...')
+    logging.info(f'\N{DOWNWARDS BLACK ARROW} Starting dataset retrieval from {oai_url}...')
     try:
         records = sickle.ListRecords(metadataPrefix=metadata_prefix, set=set_name)
         for record in tqdm(records, 'Records', unit=' records'):
