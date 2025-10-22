@@ -25,7 +25,7 @@ import time
 
 # Set up logging
 logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+                    format='%(message)s')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 logging.getLogger(__name__).addHandler(console)
@@ -56,6 +56,7 @@ args = get_args()
 date = args.date
 
 # %% Get views and downloads from Zenodo
+logging.info("\N{book} Get views and downloads from Zenodo...")
 community = 'crc172-ac3'
 records = fn.query_zenodo(community)
 total_views = 0
@@ -66,8 +67,8 @@ for record in records:
     total_views += stats.get('unique_views', 0)
     total_downloads += stats.get('unique_downloads', 0)
 
-print(f'Total Views: {total_views}')
-print(f'Total Downloads: {total_downloads}')
+logging.info(f'Total Views from Zenodo: {total_views}')
+logging.info(f'Total Downloads from Zenodo: {total_downloads}')
 
 # %% Load JSON files with all AC3 publications and do some preprocessing
 with open(f'./data/{date}-datasets_ac3_zenodo.json', 'r', encoding='utf-8') as z_file:
@@ -124,26 +125,45 @@ df = pd.concat([df[df['publisher'] == 'PANGAEA'], latest_versions.drop('common_d
 df['year'] = df['date'].dt.year
 
 # Calculate the number of publications per year
-yearly_publications = df.groupby(['year', 'publisher']).size().reset_index(name='count')
+yearly_publications = df.groupby(['year', 'publisher'], observed=False).size().reset_index(name='count')
 
 # Calculate cumulative publications
 yearly_publications['cumulative_count'] = yearly_publications['count'].cumsum()
+publisher_sel = yearly_publications['publisher'] == 'Zenodo'
+yearly_publications['cumulative_count_zenodo'] = yearly_publications[publisher_sel]['count'].cumsum()
+yearly_publications['cumulative_count_pangaea'] = yearly_publications[~publisher_sel]['count'].cumsum()
+
+# %% Formatting for plots
+cm = 1 / 2.54
+fmt_dict = dict(presentation=
+                dict(figsize=(15 * cm, 7.5 * cm),
+                     lw=2,
+                     fontsize=12,
+                     legendfontsize=10),
+                poster=
+                dict(figsize=(40 * cm, 15 * cm),
+                     lw=6,
+                     fontsize=40,
+                     legendfontsize=24
+                     )
+                )
 
 # %% Create mask for wordcloud
 from matplotlib.patches import Ellipse
+
 ellipse = Ellipse((0, 0), 8, 4, angle=0)
 _, ax = plt.subplots()
-ax.set(xlim=(-4.2, 4.2), ylim=(-2.2, 2.2))#, aspect="equal")
+ax.set(xlim=(-4.2, 4.2), ylim=(-2.2, 2.2))  # , aspect="equal")
 ax.add_artist(ellipse)
 plt.savefig('./figures/ellipse_mask.png')
-plt.show()
+# plt.show()
 plt.close()
 
 # %% Generate and plot a wordcloud made out of the most common words in the data sets
 titles = df['title'].to_list()
 mask = np.array(Image.open('figures/ellipse_mask.png'))
 
-print(len(titles))
+logging.info(f'\N{cloud} Number of titles for word cloud: {len(titles)}')
 
 titles_combined = ''
 
@@ -180,25 +200,12 @@ wordcloud = wordcloud.generate(titles_combined)
 fig, ax = plt.subplots(1)
 ax.imshow(wordcloud, interpolation='bilinear')
 ax.axis('off')
-fig.savefig('figures/wordcloud_ellipse_' + dt.datetime.now().strftime('%Y%m%d') + '.png', dpi=300, transparent=False)
+fig.savefig('figures/wordcloud_ellipse_{date}.png', dpi=300, transparent=False)
 plt.show()
 
 # %% Plot cumulative publications and yearly publications
-cm = 1 / 2.54
-fmt = dict(presentation=
-           dict(figsize=(15 * cm, 7.5 *cm),
-                lw=2,
-                fontsize=12,
-                legendfontsize=10),
-           poster=
-           dict(figsize=(40 * cm, 15 *cm),
-                lw=6,
-                fontsize=40,
-                legendfontsize=24
-                )
-           )
 mode = 'presentation'
-fmt = fmt[mode]
+fmt = fmt_dict[mode]
 plt.rc('font', size=fmt['fontsize'])
 yearly_publications = yearly_publications[(yearly_publications['year'] >= 2016) &
                                           (yearly_publications['year'] < 2028)]
@@ -232,11 +239,85 @@ ax.legend(fontsize=fmt['legendfontsize'])
 ax.tick_params(axis='x', rotation=45)  # Rotates the x-axis tick labels by 45 degrees
 ax.yaxis.set_major_locator(plt.MultipleLocator(base=500))
 
-now = pd.to_datetime(time.time(), unit='s').strftime('%Y-%m-%d')
-plt.savefig(f'./figures/{now}_yearly_cumulative_publications_{mode}.png', dpi=300)
+plt.savefig(f'./figures/{date}_yearly_cumulative_publications_{mode}.png', dpi=300)
 plt.show()
 plt.close()
 
+# %% Plot cumulative publications and yearly publications separated by repository
+mode = 'presentation'
+fmt = fmt_dict[mode]
+plt.rc('font', size=fmt['fontsize'])
 
+# Filter data
+yearly_publications = yearly_publications[
+    (yearly_publications['year'] >= 2016) &
+    (yearly_publications['year'] < 2028)
+    ]
 
+# Create figure with two rows (one per publisher)
+fig, axes = plt.subplots(
+    2, 1, figsize=fmt['figsize'], layout='constrained'
+)
 
+# Set up the barplot and pointplot for each publisher
+publishers = yearly_publications['publisher'].unique()
+for i, publisher in enumerate(publishers):
+    # Filter data for this publisher
+    df_pub = yearly_publications[yearly_publications['publisher'] == publisher]
+
+    # Bar plot (yearly count)
+    sns.barplot(
+        data=df_pub,
+        x='year',
+        y='count',
+        ax=axes[i],
+        color='steelblue',
+        alpha=0.8
+    )
+
+    # Point plot (cumulative count)
+    sns.pointplot(
+        data=df_pub,
+        x='year',
+        y=f'cumulative_count_{publisher.lower()}',
+        marker='o',
+        color='orange',
+        lw=fmt['lw'],
+        ax=axes[i],
+        label='Cumulative publications',
+        legend=None,
+    )
+
+    # Annotate cumulative values
+    y_pubs = df_pub.groupby('year')['count'].sum().cumsum()
+    for x, y in enumerate(y_pubs):
+        axes[i].text(x, y + 0.2, str(int(y)), ha='center', fontsize=fmt['legendfontsize'])
+
+    # Labels and formatting
+    axes[i].set(
+        xlabel='Year',
+        ylabel='Count',
+        title=f'{publisher}',
+    )
+
+# Adjust legend (only one needed)
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper left',
+           bbox_to_anchor=(0.15, 0.9),
+           fontsize=fmt['legendfontsize'])
+# First row
+axes[0].set(
+    xlabel='',
+    xticklabels=''
+)
+axes[0].yaxis.set_major_locator(plt.MultipleLocator(base=500))
+# Second row
+axes[1].tick_params(axis='x', rotation=45)
+axes[1].yaxis.set_major_locator(plt.MultipleLocator(base=10))
+
+# Save and show
+plt.savefig(f'./figures/{date}_yearly_cumulative_publications_per_repo_{mode}.png',
+            dpi=300,
+            bbox_inches='tight')
+plt.show()
+plt.close()
