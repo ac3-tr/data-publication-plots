@@ -9,6 +9,7 @@ Figures and facts for the poster at the SFB INF workshop on Cologne 2 - 3 Decemb
 - Metadataviews, downloads, ... from both repositories
 """
 # %% import packages
+import argparse
 from PIL import Image
 from wordcloud import WordCloud, STOPWORDS
 import datetime as dt
@@ -19,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import sys
 import time
 
 # Set up logging
@@ -29,7 +31,29 @@ console.setLevel(logging.INFO)
 logging.getLogger(__name__).addHandler(console)
 
 # %% set date of metadata retrieval
-date = '20250526'
+def get_args(debug=False, date=None):
+    parser = argparse.ArgumentParser(
+        description="Harvest metadata from Zenodo and PANGAEA for the (AC)³ community"
+    )
+    parser.add_argument("date",
+                        help="Date (yyyymmdd) for which the plots should be made.",
+                        default=time.strftime("%Y%m%d", time.localtime()),
+                        nargs='?')
+
+    if debug:
+        # Simulate command-line input
+        sys.argv = ['script.py', date or '20251022']
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args()
+
+    return args
+
+# Debug mode
+# args = get_args(debug=True, date="20251022")
+
+args = get_args()
+date = args.date
 
 # %% Get views and downloads from Zenodo
 community = 'crc172-ac3'
