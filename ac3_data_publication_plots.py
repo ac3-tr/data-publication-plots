@@ -87,14 +87,14 @@ df = df.map(fn.extract_single_value)
 
 # Convert date to actual dates
 dates = []
-for date in df['date']:
-    if date == 'No date':
+for d in df['date']:
+    if d == 'No date':
         dates.append(pd.NaT)
         continue
     try:
-        dates.append(pd.to_datetime(date))
+        dates.append(pd.to_datetime(d))
     except:
-        dates.append(pd.to_datetime(date, format='%Y'))
+        dates.append(pd.to_datetime(d, format='%Y'))
 
 df['date'] = dates
 
@@ -201,7 +201,8 @@ fig, ax = plt.subplots(1)
 ax.imshow(wordcloud, interpolation='bilinear')
 ax.axis('off')
 fig.savefig('figures/wordcloud_ellipse_{date}.png', dpi=300, transparent=False)
-plt.show()
+# plt.show()
+plt.close()
 
 # %% Plot cumulative publications and yearly publications
 mode = 'presentation'
@@ -239,9 +240,11 @@ ax.legend(fontsize=fmt['legendfontsize'])
 ax.tick_params(axis='x', rotation=45)  # Rotates the x-axis tick labels by 45 degrees
 ax.yaxis.set_major_locator(plt.MultipleLocator(base=500))
 
-plt.savefig(f'./figures/{date}_yearly_cumulative_publications_{mode}.png', dpi=300)
-plt.show()
+figname = f'./figures/{date}_yearly_cumulative_publications_{mode}.png'
+plt.savefig(figname, dpi=300)
+# plt.show()
 plt.close()
+logging.info(f'Saved {figname}')
 
 # %% Plot cumulative publications and yearly publications separated by repository
 mode = 'presentation'
@@ -316,8 +319,9 @@ axes[1].tick_params(axis='x', rotation=45)
 axes[1].yaxis.set_major_locator(plt.MultipleLocator(base=10))
 
 # Save and show
-plt.savefig(f'./figures/{date}_yearly_cumulative_publications_per_repo_{mode}.png',
+figname = f'./figures/{date}_yearly_cumulative_publications_per_repo_{mode}.png'
+plt.savefig(figname,
             dpi=300,
             bbox_inches='tight')
-plt.show()
+# plt.show()
 plt.close()
