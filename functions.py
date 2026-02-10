@@ -25,7 +25,11 @@ def query_zenodo(community, page=1, size=100, base_url='https://zenodo.org/api/r
             "page": page,
             "size": size,
         }
-        headers = {"Authorization": f'Bearer {os.environ["ACCESS_TOKEN"]}'}
+        try:
+            headers = {"Authorization": f'Bearer {os.environ["ACCESS_TOKEN"]}'}
+        except KeyError:
+            headers = None
+            params.update(size=25)
         response = requests.get(base_url, params=params, headers=headers)
         if response.status_code != 200:
             log.error(f"Failed to fetch data from Zenodo. Status code: {response.status_code}")
