@@ -7,11 +7,14 @@ Description of script
 """
 import json
 import logging
+import os
+from dotenv import load_dotenv
 import requests
 from sickle import Sickle
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)
+load_dotenv()
 
 # Query Zenodo API and return all records of one community
 def query_zenodo(community, page=1, size=100, base_url='https://zenodo.org/api/records/'):
@@ -20,9 +23,10 @@ def query_zenodo(community, page=1, size=100, base_url='https://zenodo.org/api/r
         params = {
             "communities": community,
             "page": page,
-            "size": size
+            "size": size,
         }
-        response = requests.get(base_url, params=params)
+        headers = {"Authorization": f'Bearer {os.environ["ACCESS_TOKEN"]}'}
+        response = requests.get(base_url, params=params, headers=headers)
         if response.status_code != 200:
             log.error(f"Failed to fetch data from Zenodo. Status code: {response.status_code}")
             break
